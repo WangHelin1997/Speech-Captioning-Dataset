@@ -35,5 +35,67 @@ python ./scripts/run_prompt_creation.py \
   --dataloader_num_workers 4 \
   --output_dir ${OUTPUT_DIR} \
   --load_in_4bit \
+  --overwrite_output_dir \
   --push_to_hub \
-  --hub_dataset_id "westbrook/gigaspeech-tiny-stage4"
+  --hub_dataset_id "westbrook/gigaspeech-tiny-stage4" \
+  --num_description 1
+
+python ./scripts/run_prompt_creation.py \
+  --cache_dir ${CACHE_DIR} \
+  --dataset_name "westbrook/gigaspeech-tiny-stage4" \
+  --dataset_config_name "default" \
+  --model_name_or_path "mistralai/Mistral-7B-Instruct-v0.2" \
+  --per_device_eval_batch_size 64 \
+  --attn_implementation "sdpa" \
+  --dataloader_num_workers 4 \
+  --output_dir ${OUTPUT_DIR} \
+  --load_in_4bit \
+  --overwrite_output_dir \
+  --push_to_hub \
+  --hub_dataset_id "westbrook/gigaspeech-tiny-stage4" \
+  --num_description 2
+
+python ./scripts/run_prompt_creation.py \
+  --cache_dir ${CACHE_DIR} \
+  --dataset_name "westbrook/gigaspeech-tiny-stage4" \
+  --dataset_config_name "default" \
+  --model_name_or_path "mistralai/Mistral-7B-Instruct-v0.2" \
+  --per_device_eval_batch_size 64 \
+  --attn_implementation "sdpa" \
+  --dataloader_num_workers 4 \
+  --output_dir ${OUTPUT_DIR} \
+  --load_in_4bit \
+  --overwrite_output_dir \
+  --push_to_hub \
+  --hub_dataset_id "westbrook/gigaspeech-tiny-stage4" \
+  --num_description 3
+
+python ./scripts/run_prompt_creation.py \
+  --cache_dir ${CACHE_DIR} \
+  --dataset_name "westbrook/gigaspeech-tiny-stage4" \
+  --dataset_config_name "default" \
+  --model_name_or_path "mistralai/Mistral-7B-Instruct-v0.2" \
+  --per_device_eval_batch_size 64 \
+  --attn_implementation "sdpa" \
+  --dataloader_num_workers 4 \
+  --output_dir ${OUTPUT_DIR} \
+  --load_in_4bit \
+  --overwrite_output_dir \
+  --push_to_hub \
+  --hub_dataset_id "westbrook/gigaspeech-tiny-stage4" \
+  --num_description 4
+
+python ./scripts/run_prompt_creation.py \
+  --cache_dir ${CACHE_DIR} \
+  --dataset_name "westbrook/gigaspeech-tiny-stage4" \
+  --dataset_config_name "default" \
+  --model_name_or_path "mistralai/Mistral-7B-Instruct-v0.2" \
+  --per_device_eval_batch_size 64 \
+  --attn_implementation "sdpa" \
+  --dataloader_num_workers 4 \
+  --output_dir ${OUTPUT_DIR} \
+  --load_in_4bit \
+  --overwrite_output_dir \
+  --push_to_hub \
+  --hub_dataset_id "westbrook/gigaspeech-tiny-stage4" \
+  --num_description 5
