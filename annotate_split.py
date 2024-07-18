@@ -1,4 +1,4 @@
-from datasets import load_dataset, Audio
+from datasets import load_dataset, Audio, load_from_disk
 from multiprocess import set_start_method
 import argparse
 import os
@@ -17,10 +17,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     
-    if args.configuration:
-        dataset = load_dataset(args.dataset_name, args.configuration, num_proc=args.cpu_num_workers, cache_dir=args.cache_dir)
-    else:
-        dataset = load_dataset(args.dataset_name, num_proc=args.cpu_num_workers, cache_dir=args.cache_dir)
+    dataset = load_from_disk(args.cache_dir)
 
     segment_ids = [dataset['train'][i]['segment_id'] for i in range(len(dataset['train']))]
     print(segment_ids)
