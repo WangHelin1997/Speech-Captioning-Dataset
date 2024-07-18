@@ -1,5 +1,5 @@
-CACHE_DIR="/data/lmorove1/hwang258/dataspeech/cache"
-OUTPUT_DIR="/data/lmorove1/hwang258/dataspeech/output"
+CACHE_DIR="/content/cache/out/gigaspeech-tiny-0-train"
+OUTPUT_DIR="/content/cache/out/gigaspeech-tiny-0-train-stage1"
 
 CUDA_VISIBLE_DEVICES=0 python main.py \
   --cache_dir ${CACHE_DIR} \
