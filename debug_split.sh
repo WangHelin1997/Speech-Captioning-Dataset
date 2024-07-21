@@ -1,7 +1,7 @@
 CACHE_DIR="/content/cache/out/gigaspeech-tiny-0-train"
 OUTPUT_DIR="/content/cache/out/gigaspeech-tiny-0-train-stage1"
 
-CUDA_VISIBLE_DEVICES=0 python main.py \
+CUDA_VISIBLE_DEVICES=0 python main_split.py \
   --cache_dir ${CACHE_DIR} \
   --output_dir ${OUTPUT_DIR} \
   --text_column_name "text" \
