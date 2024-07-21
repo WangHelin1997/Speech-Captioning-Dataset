@@ -19,27 +19,29 @@ if __name__ == "__main__":
     
     dataset = load_from_disk(args.cache_dir)
 
-    segment_ids = [dataset['train'][i]['segment_id'] for i in range(len(dataset['train']))]
+    segment_ids = [dataset[i]['segment_id'] for i in range(len(dataset))]
     print(segment_ids)
 
     csv_list = ['age','accent','brightness','emotion','gender','smoothness'] # add more here
     thres = 0.95
     for item in csv_list:
-        # Load the CSV file
-        df = pd.read_csv(os.path.join(args.csv_dir, item+'.csv'))
-        df['segment_id'] = pd.Categorical(df['segment_id'], categories=segment_ids, ordered=True)
-        sorted_df = df.sort_values(by='segment_id')
-        dataset['train'] = dataset['train'].add_column(item+'_ori', list(sorted_df[item]))
-        labeled = [item if value > thres else "None" for item, value in zip(list(sorted_df[item]), list(sorted_df[item+"_value"]))]
-        dataset['train'] = dataset['train'].add_column(item+"_value", list(sorted_df[item+"_value"]))
-        dataset['train'] = dataset['train'].add_column(item, labeled)
+        df = pd.read_csv(os.path.join(args.csv_dir, item + '.csv'))
+        all_segments_df = pd.DataFrame({'segment_id': segment_ids})
+        merged_df = all_segments_df.merge(df, on='segment_id', how='left')
+        merged_df['segment_id'] = pd.Categorical(merged_df['segment_id'], categories=segment_ids, ordered=True)
+        sorted_df = merged_df.sort_values(by='segment_id')
+        dataset = dataset.add_column(item + '_ori', sorted_df[item].fillna("None").tolist())
+        labeled = [item if value > thres else "None" for item, value in zip(sorted_df[item].fillna("None"), sorted_df[item + "_value"].fillna(0))]
+        
+        dataset = dataset.add_column(item + "_value", sorted_df[item + "_value"].fillna(0).tolist())
+        dataset = dataset.add_column(item, labeled)
 
     # Function to update speaker name
     def update_speaker_column(example, index):
         new_speaker = f"TmpSpeaker_{index + 1}"
         return {'speaker': new_speaker}
     
-    dataset['train'] = dataset['train'].map(update_speaker_column, with_indices=True)
+    dataset = dataset.map(update_speaker_column, with_indices=True)
 
     if args.output_dir:
         print("Saving to disk...")
