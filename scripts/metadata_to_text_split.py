@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from datasets import load_dataset, DatasetDict
+from datasets import load_dataset, DatasetDict, load_from_disk
 from multiprocess import set_start_method
 import argparse
 from pathlib import Path
@@ -58,10 +58,9 @@ def bins_to_text(dataset, text_bins, column_name, output_column_name, leading_sp
     '''
     if bin_edges is None:
         values = []
-        for df in dataset:
-            for split in df:
-                if leading_split_for_bins is None or leading_split_for_bins in split:
-                    values.extend(df[split][column_name])
+        
+        if leading_split_for_bins is None or leading_split_for_bins in split:
+            values.extend(dataset[column_name])
         
         # filter out outliers
         values = np.array(values)
@@ -92,7 +91,8 @@ def bins_to_text(dataset, text_bins, column_name, output_column_name, leading_sp
             output_column_name: batch_bins
         }
     
-    dataset = [df.map(batch_association, batched=True, batch_size=batch_size, input_columns=[column_name], num_proc=num_workers) for df in dataset]
+    dataset = dataset.map(batch_association, batched=True, batch_size=batch_size, input_columns=[column_name], num_proc=num_workers)
+    
     return dataset, bin_edges
 
 def speaker_level_relative_to_gender(dataset, text_bins, speaker_column_name, gender_column_name, column_name, output_column_name, batch_size = 4, num_workers=1, std_tolerance=None, save_dir=None, only_save_plot=False, bin_edges=None):
@@ -102,10 +102,8 @@ def speaker_level_relative_to_gender(dataset, text_bins, speaker_column_name, ge
     This time, doesn't use leading_split_for_bins, computes it for all. Could probably be optimized
     '''
     list_data = []
-    for df in dataset:
-        for split in df:
-            panda_data = df[split].remove_columns([col for col in df[split].column_names if col not in {speaker_column_name, column_name, gender_column_name}]).to_pandas()
-            list_data.append(panda_data)
+    panda_data = dataset.remove_columns([col for col in dataset.column_names if col not in {speaker_column_name, column_name, gender_column_name}]).to_pandas()
+    list_data.append(panda_data)
         
     dataframe = pd.concat(list_data, ignore_index=True)
     dataframe = dataframe.groupby(speaker_column_name).agg({column_name: "mean", gender_column_name: "first"})
@@ -146,7 +144,7 @@ def speaker_level_relative_to_gender(dataset, text_bins, speaker_column_name, ge
         }
         
     
-    dataset = [df.map(batch_association, batched=True, input_columns=[speaker_column_name], batch_size=batch_size, num_proc=num_workers) for df in dataset]
+    dataset = dataset.map(batch_association, batched=True, input_columns=[speaker_column_name], batch_size=batch_size, num_proc=num_workers)
     return dataset, bin_edges
 
 if __name__ == "__main__":
@@ -196,12 +194,8 @@ if __name__ == "__main__":
     reverberation_bins = text_bins_dict.get("reverberation_bins", REVERBERATION_BINS)
     utterance_level_std = text_bins_dict.get("utterance_level_std", UTTERANCE_LEVEL_STD)
     
-    output_dirs = [args.output_dir] if args.output_dir is not None else None
-    repo_ids = [args.repo_id] if args.repo_id is not None else None
 
-
-        else:
-            dataset = [load_dataset(args.dataset_name)]
+    dataset = load_from_disk(args.cache_dir)
 
     if args.plot_directory:
         Path(args.plot_directory).mkdir(parents=True, exist_ok=True)
@@ -233,5 +227,4 @@ if __name__ == "__main__":
             json.dump(bin_edges, outfile)
         
     if args.output_dir:
-        for output_dir, df in zip(output_dirs, dataset):
-            df.save_to_disk(output_dir)
+        dataset.save_to_disk(args.output_dir)
