@@ -20,7 +20,6 @@ if __name__ == "__main__":
     dataset = load_from_disk(args.cache_dir)
 
     segment_ids = [dataset[i]['segment_id'] for i in range(len(dataset))]
-    print(segment_ids)
 
     csv_list = ['age','accent','brightness','emotion','gender','smoothness'] # add more here
     thres = 0.95
