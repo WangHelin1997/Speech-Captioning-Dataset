@@ -160,7 +160,7 @@ if __name__ == "__main__":
     parser.add_argument("--cpu_num_workers", default=1, type=int, help="Number of CPU workers.")
     parser.add_argument("--batch_size", default=16, type=int, help="Batch size in `Dataset.map` operations. https://huggingface.co/docs/datasets/v2.17.0/en/package_reference/main_classes#datasets.Dataset.map")
     parser.add_argument("--speaker_id_column_name", default="speaker", type=str, help="Speaker id column name. Only used if `avoid_pitch_computation=False`")
-    parser.add_argument("--gender_column_name", default="gender", type=str, help="Gender column name. .Only used if `avoid_pitch_computation=False`")
+    parser.add_argument("--gender_column_name", default="gender_ori", type=str, help="Gender column name. .Only used if `avoid_pitch_computation=False`")
     parser.add_argument("--pitch_std_tolerance", default=2., type=float, help="Standard deviation tolerance for pitch estimation. Any value that is outside mean ± std * tolerance is discared. Only used if `avoid_pitch_computation=False`.")
     parser.add_argument("--speaking_rate_std_tolerance", default=4., type=float, help="Standard deviation tolerance for speaking rate estimation. Any value that is outside mean ± std * tolerance is discared. Only used if `path_to_bin_edges=False`.")
     parser.add_argument("--snr_std_tolerance", default=3.5, type=float, help="Standard deviation tolerance for SNR estimation. Any value that is outside mean ± std * tolerance is discared. Only used if `path_to_bin_edges=False`.")
