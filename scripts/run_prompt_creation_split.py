@@ -276,32 +276,6 @@ Keywords:
 2. Age (e.g., teenager, adult, senior)
 3. Brightness of the timbre (e.g., bright, dark)
 4. Smoothness of the timbre (e.g., smooth, rough)
-5. Accent (e.g., Dutch, German, etc.)
-6. Emotion (e.g., angry, sad, happy, etc.)
-7. Reverberation (e.g., very roomy sounding, quite confined sounding, etc.)
-8. Noise level (e.g., very noisy, quite clear, etc.)
-9. Tone (e.g., very monotone, quite expressive, etc.)
-10. Pace (e.g., very slowly, quite fast, etc.)
-11. Pitch (e.g., very low pitch, quite high pitch, etc.)
-
-Instructions:
-1. Use these keywords to create a grammatically correct and easy-to-understand description of the speech sample.
-2. Rearrange the keyword order as necessary and substitute synonymous terms where appropriate.
-3. If a keyword is 'None,' omit it from the description.
-4. If noise is 'very noisy' and reverberation is 'very roomy sounding,' mention 'very bad recording.'
-5. If noise is 'very clear' and reverberation is 'very confined sounding,' mention 'very good recording.'
-6. Do not add extra details beyond the provided keywords.
-7. You can drop one of two keywords for diversity.
-8. Return only the generated description.
-
-Objective:
-Generate a single text description of a speech sample using the provided keywords.
-
-Keywords:
-1. Gender (e.g., male, female)
-2. Age (e.g., teenager, adult, senior)
-3. Brightness of the timbre (e.g., bright, dark)
-4. Smoothness of the timbre (e.g., smooth, rough)
 5. Emotion (e.g., angry, sad, happy, etc.)
 6. Reverberation (e.g., very roomy sounding, quite confined sounding, etc.)
 7. Noise level (e.g., very noisy, quite clear, etc.)
