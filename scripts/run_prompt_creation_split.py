@@ -267,27 +267,6 @@ class DataCollatorWithPadding:
         return batch
 
 
-# TODO(SG): add accent keyword
-# PROMPT = """You will be given eleven descriptive keywords related to an audio sample of a person's speech. These keywords include:
-# 1. The gender (e.g., male, female)
-# 2. The age (e.g., teenagers, adult, senior)
-# 3. The brightness of the timbre (e.g. bright, dark)
-# 4. The smoothness of the timbre (e.g. smooth, rough)
-# 5. The accent (e.g. Dutch, German, Czech, Polish, French, Hungarian, Finnish, Romanian, Slovak, Spanish, Italian, Estonian, Lithuanian, Croatian, Slovene, English, Scottish, Irish, NorthernIrish, Indian, Vietnamese, Canadian, American)
-# 6. The emotion (e.g. angry, disgust, sad, fear, happy, neutral)
-# 7. The level of reverberation (e.g., very roomy sounding, quite roomy sounding, slightly roomy sounding, moderate reverberation, slightly confined sounding, quite confined sounding, very confined sounding)
-# 8. The amount of noise the sample (e.g., very noisy, quite noisy, slightly noisy, moderate ambient sound, slightly clear, quite clear, very clear)
-# 9. The tone of the speaker's voice (e.g., very monotone, quite monotone, slightly monotone, moderate intonation, slightly expressive, quite expressive, very expressive)
-# 10. The pace of the speaker's delivery (e.g., very slowly, quite slowly, slightly slowly, moderate speed, slightly fast, quite fast, very fast)
-# 11. The pitch of the speaker's voice (e.g., very low pitch, quite low pitch, slightly low pitch, moderate pitch, slightly high pitch, quite high pitch, very high pitch)
-
-# Your task is to create a text description using these keywords that accurately describes the speech sample while ensuring the description remains grammatically correct and easy to understand. You should rearrange the keyword order as necessary, and substitute synonymous terms where appropriate. If the term is None, just remove that keyword for the speech sample. If the amount of noise is 'very noisy' and the level of reverberation is 'very roomy sounding', include terms like 'very bad recording' in the description. Likewise, if the amount of noise is 'very clear' and the level of reverberation is 'very confined sounding', include terms like 'very good recording' in the description. Otherwise, do not add extra details beyond what has been provided, and only return the generated description.
-
-# For example, given the following keywords: 'female', 'adult', 'bright', 'smooth', 'None', 'happy', 'slightly roomy sounding', 'slightly noisy', 'very expressive', 'slightly low pitch', 'very slowly', a valid description would be: 'an adult woman with a deep, bright and smooth voice speaks slowly and happily but has an animated delivery in an echoey room with some background noise'.
-# Another valid description would be: 'In a room with slight background noise, a female middle-aged speaker delivers an animated, bright, smooth and expressive speech, at a very slow pace, with a happy mood.'
-
-# For the keywords: '[gender]', '[age]', '[brightness]', '[smoothness]', '[accent]', '[emotion]', '[reverberation]', '[noise]', '[speech_monotony]', '[pitch]', '[speaking_rate]', the corresponding description is:"
-# """
 PROMPT_FRONT = """
 Objective:
 Generate a single text description of a speech sample using the provided keywords.
@@ -315,158 +294,124 @@ Instructions:
 7. You can drop one of two keywords for diversity.
 8. Return only the generated description.
 
+Objective:
+Generate a single text description of a speech sample using the provided keywords.
+
+Keywords:
+1. Gender (e.g., male, female)
+2. Age (e.g., teenager, adult, senior)
+3. Brightness of the timbre (e.g., bright, dark)
+4. Smoothness of the timbre (e.g., smooth, rough)
+5. Emotion (e.g., angry, sad, happy, etc.)
+6. Reverberation (e.g., very roomy sounding, quite confined sounding, etc.)
+7. Noise level (e.g., very noisy, quite clear, etc.)
+8. Tone (e.g., very monotone, quite expressive, etc.)
+9. Pace (e.g., very slowly, quite fast, etc.)
+10. Pitch (e.g., very low pitch, quite high pitch, etc.)
+
+Instructions:
+1. Use the keywords to create a grammatically correct and easy-to-understand description of the speech sample, varying the sentence structure and phrasing as much as possible across examples.
+2. Rearrange the keyword order, split ideas across multiple sentences, or introduce descriptive transitions to make the description fluid and natural.
+3. Substitute synonymous terms where appropriate, and rephrase parts of the description to add variety and keep it engaging.
+4. If a keyword is 'None,' omit it from the description.
+5. If noise is 'very noisy' and reverberation is 'very roomy sounding,' describe it as a 'very bad recording.'
+6. If noise is 'very clear' and reverberation is 'very confined sounding,' describe it as a 'very good recording.'
+7. Avoid repeating the same structure for consecutive descriptions. Explore different ways to convey the tone, pace, emotion, and other characteristics.
+8. You can drop some of the keywords for diversity.
+9. Return only the generated description.
 
 """
 
 PROMPT_END = """
 Keywords:
-'[gender]', '[age]', '[brightness]', '[smoothness]', '[accent]', '[emotion]', '[reverberation]', '[noise]', '[speech_monotony]', '[pitch]', '[speaking_rate]'
+'[gender]', '[age]', '[brightness]', '[smoothness]', '[emotion]', '[reverberation]', '[noise]', '[speech_monotony]', '[pitch]', '[speaking_rate]'
 The corresponding description is:
 
 """
 
 EXAMPLES = [
     """Given the keywords:
-    'female', 'adult', 'bright', 'smooth', 'American', 'happy', 'slightly roomy sounding', 'slightly noisy', 'very expressive', 'slightly low pitch', 'very slowly'
-    A valid description could be: "Bright and smooth, the voice of an adult American woman is heard speaking very slowly and happily, with animated delivery in an echoey room with some background noise."
+         'female', 'teenager', 'slightly bright', 'smooth', 'neutral', 'slightly confined sounding', 'very clear', 'somewhat expressive', 'medium pitch', 'average pace',
+    A valid description could be: "A teenage girl speaks with a neutral tone, her smooth, slightly bright voice carrying a medium pitch. The sound is clear and confined, her words somewhat expressive."
     """,
     """Given the keywords:
-    'male', 'senior', 'dark', 'rough', 'Scottish', 'angry', 'very confined sounding', 'very clear', 'very monotone', 'very low pitch', 'moderate speed'
-    A valid description could be: "The dark, rough voice of an elderly Scottish man speaks at a moderate speed, sounding angry and monotone in a very clear, confined room, making it a very good recording."
+         'male', 'teenager', 'dark', 'rough', 'angry', 'slightly confined sounding', 'moderately noisy', 'somewhat monotone', 'low pitch', 'quite fast',
+    A valid description could be: "A teenage boy speaks with a low, dark voice that carries a rough, angry tone. His words come fast and slightly monotone, with a bit of background noise adding to the confined atmosphere."
     """,
     """Given the keywords:
-    'female', 'teenager', 'bright', 'smooth', 'French', 'neutral', 'moderate reverberation', 'moderate ambient sound', 'slightly expressive', 'moderate pitch', 'quite fast'
-    A valid description could be: "Quickly and neutrally, a French teenage girl speaks with a bright, smooth voice and slight expressiveness in a moderately reverberant room with ambient noise."
+         'female', 'adult', 'bright', 'smooth', 'happy', 'quite roomy sounding', 'very clear', 'expressive', 'high pitch', 'moderate pace',
+    A valid description could be: "An adult woman speaks happily with a bright, smooth timbre and high pitch. Her voice resonates expressively through the clear, spacious room, flowing at a moderate pace."
     """,
     """Given the keywords:
-    'male', 'adult', 'dark', 'smooth', 'German', 'happy', 'very roomy sounding', 'very noisy', 'very expressive', 'very high pitch', 'very fast'
-    A valid description could be: "Joyful and expressive, a German man with a high-pitched, dark, smooth voice speaks very quickly in a very noisy, roomy environment, making it a very bad recording."
+         'male', 'senior', 'soft', 'smooth', 'neutral', 'quite confined sounding', 'very clear', 'somewhat monotone', 'medium pitch', 'slowly',
+    A valid description could be: "Soft and smooth, an older man's neutral voice echoes in a very clear, confined space. His words are slow and somewhat monotone, with a steady, medium pitch."
     """,
     """Given the keywords:
-    'female', 'senior', 'bright', 'rough', 'Canadian', 'sad', 'slightly confined sounding', 'quite clear', 'very expressive', 'moderate pitch', 'slightly slowly'
-    A valid description could be: "Speaking slowly with a bright yet rough voice, a senior Canadian woman clearly conveys sadness in a slightly confined space, despite the clarity of the recording."
+         'female', 'child', 'slightly bright', 'rough', 'excited', 'slightly roomy sounding', 'slightly noisy', 'very expressive', 'quite high pitch', 'quite fast',
+    A valid description could be: "A child’s voice, high-pitched and filled with excitement, is bright and slightly rough. She speaks expressively and fast, her tone echoing lightly with a touch of background noise."
     """,
     """Given the keywords:
-    'male', 'teenager', 'dark', 'rough', 'None', 'angry', 'very confined sounding', 'very clear', 'very monotone', 'very low pitch', 'very slowly'
-    A valid description could be: "Dark and rough, the voice of a teenage boy delivers his speech slowly and monotonously, sounding very angry in a very clear, confined room."
+         'male', 'adult', 'dark', 'smooth', 'calm', 'very confined sounding', 'very clear', 'monotone', 'low pitch', 'slow pace',
+    A valid description could be: "A calm, low-pitched voice from an adult male drifts through a confined, very clear setting. The tone is dark and smooth, with a slow, monotone delivery."
     """,
     """Given the keywords:
-    'female', 'adult', 'bright', 'smooth', 'None', 'happy', 'slightly roomy sounding', 'slightly noisy', 'very expressive', 'None', 'very slowly'
-    A valid description could be: "Happily and expressively, an adult woman with a bright, smooth voice speaks very slowly in a slightly noisy, echoey room."
+         'female', 'teenager', 'bright', 'slightly rough', 'sad', 'roomy sounding', 'moderately noisy', 'somewhat expressive', 'low pitch', 'slow pace',
+    A valid description could be: "With a touch of sadness, a teenage girl’s voice—bright yet slightly rough—fills a roomy space. Her low pitch is delivered slowly, and there’s a moderate level of background noise."
     """,
     """Given the keywords:
-    'male', 'senior', 'None', 'smooth', 'Irish', 'sad', 'moderate reverberation', 'moderate ambient sound', 'quite monotone', 'moderate pitch', 'moderate speed'
-    A valid description could be: "Smooth and monotone, an elderly Irish man speaks moderately, sounding sad in a moderately reverberant room with ambient noise."
+         'male', 'adult', 'slightly dark', 'smooth', 'neutral', 'slightly confined sounding', 'very clear', 'monotone', 'medium pitch', 'average pace',
+    A valid description could be: "An adult male’s voice, neutral and slightly dark, sounds clear and confined. He speaks at a medium pitch and an even pace, with a steady, monotone rhythm."
     """,
     """Given the keywords:
-    'female', 'teenager', 'None', 'None', 'French', 'neutral', 'slightly roomy sounding', 'moderate ambient sound', 'slightly expressive', 'moderate pitch', 'quite fast'
-    A valid description could be: "Neutral and slightly expressive, a French teenage girl speaks quickly in a slightly roomy room with moderate ambient sound."
+         'female', 'senior', 'bright', 'smooth', 'happy', 'quite roomy sounding', 'clear', 'expressive', 'high pitch', 'quite fast',
+    A valid description could be: "Her high-pitched, bright voice fills the room with clear, expressive energy. The woman speaks quickly, a note of happiness in her tone."
     """,
     """Given the keywords:
-    'male', 'adult', 'dark', 'None', 'German', 'happy', 'very roomy sounding', 'very noisy', 'very expressive', 'very high pitch', 'very fast'
-    A valid description could be: "In a very noisy, roomy environment, a happy German man with a high-pitched, dark voice speaks very fast and expressively, making it a very bad recording."
+         'male', 'child', 'soft', 'slightly rough', 'curious', 'slightly roomy sounding', 'slightly noisy', 'expressive', 'quite high pitch', 'slowly',
+    A valid description could be: "A curious young boy speaks slowly in a soft, slightly rough tone. His voice is high-pitched, expressive, and gently echoes through the room with light background noise."
     """,
     """Given the keywords:
-    'female', 'senior', 'bright', 'None', 'Canadian', 'sad', 'slightly confined sounding', 'quite clear', 'very expressive', 'None', 'slightly slowly'
-    A valid description could be: "Bright-voiced and expressive, a senior Canadian woman speaks slowly, conveying sadness in a slightly confined, clear room."
+         'female', 'adult', 'bright', 'smooth', 'neutral', 'quite confined sounding', 'very clear', 'monotone', 'medium pitch', 'quite fast',
+    A valid description could be: "In a confined, very clear space, an adult woman’s bright, smooth voice comes across in a neutral, monotone manner. She speaks at a quick pace with a moderate pitch."
     """,
     """Given the keywords:
-    'male', 'adult', 'dark', 'rough', 'Scottish', 'None', 'moderate reverberation', 'slightly noisy', 'slightly monotone', 'very low pitch', 'moderate speed'
-    A valid description could be: "Moderately and slightly monotone, a Scottish man with a dark, rough voice speaks in a moderately reverberant, slightly noisy room."
+         'male', 'teenager', 'slightly dark', 'rough', 'angry', 'roomy sounding', 'noisy', 'very expressive', 'low pitch', 'fast',
+    A valid description could be: "A teenage boy’s voice, low-pitched and dark, is rough with anger. His words spill out quickly and expressively, filling a noisy, open room."
     """,
     """Given the keywords:
-    'female', 'teenager', 'bright', 'smooth', 'None', 'happy', 'quite confined sounding', 'quite clear', 'very expressive', 'moderate pitch', 'quite fast'
-    A valid description could be: "Quickly and happily, a teenage girl with a bright, smooth voice speaks very expressively in a quite clear, confined room."
+         'female', 'child', 'bright', 'smooth', 'cheerful', 'quite confined sounding', 'quite clear', 'expressive', 'high pitch', 'moderate pace',
+    A valid description could be: "In a cheerful tone, a young girl speaks with a bright, smooth voice. Her high pitch and expressive delivery ring out clearly in a confined space."
     """,
     """Given the keywords:
-    'male', 'senior', 'None', 'smooth', 'Dutch', 'sad', 'very roomy sounding', 'very noisy', 'very monotone', 'slightly low pitch', 'very slowly'
-    A valid description could be: "Sadly and monotonously, an elderly Dutch man speaks very slowly with a smooth, low-pitched voice in a very noisy, roomy environment, making it a very bad recording."
+         'male', 'adult', 'dark', 'rough', 'bored', 'slightly roomy sounding', 'slightly noisy', 'monotone', 'low pitch', 'slowly',
+    A valid description could be: "A man’s voice, dark and rough, comes slowly and monotonously, conveying a sense of boredom. There’s a slight echo and faint noise in the background."
     """,
     """Given the keywords:
-    'female', 'adult', 'None', 'rough', 'Estonian', 'neutral', 'slightly confined sounding', 'moderate ambient sound', 'quite expressive', 'slightly high pitch', 'moderate speed'
-    A valid description could be: "Rough-voiced and expressive, an Estonian woman delivers a neutral speech at a moderate speed in a slightly confined room with moderate ambient sound."
+         'female', 'senior', 'bright', 'smooth', 'relaxed', 'quite confined sounding', 'very clear', 'somewhat expressive', 'medium pitch', 'average pace',
+    A valid description could be: "A relaxed, smooth voice with a bright timbre belongs to an older woman. Her medium pitch sounds very clear and slightly expressive within a confined space."
     """,
     """Given the keywords:
-    'male', 'teenager', 'dark', 'rough', 'American', 'angry', 'slightly confined sounding', 'quite clear', 'very expressive', 'slightly low pitch', 'quite fast'
-    A valid description could be: "Quickly and angrily, an American teenage boy with a dark, rough voice speaks very expressively in a slightly confined, clear room."
+         'male', 'teenager', 'slightly dark', 'smooth', 'curious', 'roomy sounding', 'clear', 'expressive', 'medium pitch', 'quite fast',
+    A valid description could be: "A curious teenage boy speaks at a quick pace in a slightly dark, smooth tone. His medium pitch echoes expressively through a clear, spacious room."
     """,
     """Given the keywords:
-    'female', 'senior', 'bright', 'smooth', 'French', 'happy', 'moderate reverberation', 'slightly noisy', 'quite expressive', 'moderate pitch', 'moderate speed'
-    A valid description could be: "Happily and expressively, a senior French woman with a bright, smooth voice speaks at a moderate pace in a moderately reverberant, slightly noisy room."
+         'female', 'child', 'soft', 'gentle', 'calm', 'slightly roomy sounding', 'quite clear', 'monotone', 'high pitch', 'slow pace',
+    A valid description could be: "Calm and gentle, a young girl’s soft, high-pitched voice fills a slightly roomy, clear space. She speaks at a slow pace, her tone largely monotone."
     """,
     """Given the keywords:
-    'male', 'adult', 'dark', 'smooth', 'Irish', 'sad', 'very confined sounding', 'very clear', 'very monotone', 'very low pitch', 'very slowly'
-    A valid description could be: "Sadly and monotonously, an Irish man with a dark, smooth voice speaks very slowly in a very clear, confined room, making it a very good recording."
+         'male', 'adult', 'dark', 'rough', 'neutral', 'confined sounding', 'very clear', 'monotone', 'low pitch', 'quite fast',
+    A valid description could be: "An adult man’s voice, dark and rough, delivers words quickly in a monotone style. The recording is very clear, and his low pitch reverberates within a confined space."
     """,
     """Given the keywords:
-    'female', 'teenager', 'bright', 'rough', 'German', 'happy', 'quite roomy sounding', 'moderate ambient sound', 'slightly expressive', 'moderate pitch', 'quite fast'
-    A valid description could be: "Quickly and happily, a German teenage girl with a bright, rough voice speaks with slight expressiveness in a moderately ambient, roomy environment."
+         'female', 'adult', 'bright', 'smooth', 'excited', 'slightly roomy sounding', 'slightly noisy', 'expressive', 'high pitch', 'very fast',
+    A valid description could be: "Excitement fills an adult woman’s bright, smooth voice as she speaks expressively at a very fast pace. Her high pitch carries in a slightly echoey room with mild noise."
     """,
     """Given the keywords:
-    'male', 'senior', 'dark', 'smooth', 'American', 'neutral', 'slightly confined sounding', 'slightly noisy', 'quite monotone', 'slightly low pitch', 'moderate speed'
-    A valid description could be: "Speaking moderately, an elderly American man with a dark, smooth voice sounds neutral and monotone in a slightly noisy, confined room."
-    """,
-    """Given the keywords:
-    'female', 'adult', 'bright', 'smooth', 'Canadian', 'happy', 'slightly roomy sounding', 'quite clear', 'very expressive', 'slightly high pitch', 'very slowly'
-    A valid description could be: "Bright and smooth, the voice of a happy Canadian woman speaks very slowly and expressively in a slightly roomy, clear environment."
-    """,
-    """Given the keywords:
-    'male', 'teenager', 'dark', 'rough', 'Dutch', 'angry', 'moderate reverberation', 'slightly noisy', 'slightly monotone', 'moderate pitch', 'quite fast'
-    A valid description could be: "Angrily and quickly, a Dutch teenage boy with a dark, rough voice speaks slightly monotone in a moderately reverberant, slightly noisy room."
-    """,
-    """Given the keywords:
-    'female', 'senior', 'None', 'bright', 'Estonian', 'sad', 'slightly confined sounding', 'quite clear', 'very expressive', 'moderate pitch', 'slightly slowly'
-    A valid description could be: "Expressively and sadly, a senior Estonian woman with a bright voice speaks slowly in a slightly confined, clear room."
-    """,
-    """Given the keywords:
-    'male', 'adult', 'dark', 'smooth', 'Irish', 'happy', 'very roomy sounding', 'very noisy', 'quite monotone', 'very low pitch', 'moderate speed'
-    A valid description could be: "Happy and smooth-voiced, an Irish man with a dark timbre speaks moderately in a very noisy, roomy environment, making it a very bad recording."
-    """,
-    """Given the keywords:
-    'female', 'teenager', 'bright', 'rough', 'American', 'neutral', 'moderate reverberation', 'slightly noisy', 'very expressive', 'moderate pitch', 'quite fast'
-    A valid description could be: "Bright and rough, an American teenage girl speaks quickly and expressively with a neutral tone in a moderately reverberant, slightly noisy room."
-    """,
-    """Given the keywords:
-    'male', 'senior', 'dark', 'smooth', 'Dutch', 'sad', 'slightly confined sounding', 'quite clear', 'slightly monotone', 'slightly low pitch', 'very slowly'
-    A valid description could be: "Sadly and smoothly, an elderly Dutch man with a dark voice speaks very slowly and slightly monotonously in a slightly confined, clear room."
-    """,
-    """Given the keywords:
-    'female', 'adult', 'bright', 'smooth', 'French', 'happy', 'very confined sounding', 'very clear', 'quite expressive', 'moderate pitch', 'moderate speed'
-    A valid description could be: "Bright and smooth, the voice of a happy French woman speaks moderately and expressively in a very clear, confined room, making it a very good recording."
-    """,
-    """Given the keywords:
-    'male', 'teenager', 'dark', 'rough', 'American', 'angry', 'very roomy sounding', 'very noisy', 'very monotone', 'very low pitch', 'quite fast'
-    A valid description could be: "Quickly and angrily, a dark, rough voice of an American teenage boy speaks very monotonously in a very noisy, roomy environment, making it a very bad recording."
-    """,
-    """Given the keywords:
-    'female', 'senior', 'bright', 'rough', 'Scottish', 'sad', 'moderate reverberation', 'quite noisy', 'very expressive', 'slightly high pitch', 'slightly slowly'
-    A valid description could be: "Sad and expressive, a senior Scottish woman with a bright, rough voice speaks slowly in a moderately reverberant, quite noisy room."
-    """,
-    """Given the keywords:
-    'male', 'adult', 'dark', 'smooth', 'German', 'neutral', 'slightly confined sounding', 'quite clear', 'slightly monotone', 'slightly low pitch', 'moderate speed'
-    A valid description could be: "Neutral and smooth, the voice of a German man with a dark timbre speaks moderately and slightly monotonously in a slightly confined, clear room."
-    """,
-    """Given the keywords:
-    'female', 'teenager', 'bright', 'smooth', 'Estonian', 'happy', 'moderate reverberation', 'quite clear', 'very expressive', 'moderate pitch', 'moderate speed'
-    A valid description could be: "An Estonian teenage girl with a bright, smooth voice delivers a happy and very expressive speech at a moderate pace in a moderately reverberant, clear room."
-    """,
-    """Given the keywords:
-    'male', 'adult', 'dark', 'rough', 'Scottish', 'sad', 'very roomy sounding', 'very noisy', 'slightly monotone', 'very low pitch', 'quite fast'
-    A valid description could be: "A Scottish man with a dark, rough voice delivers a sad, slightly monotone speech very quickly in a very noisy, roomy environment, resulting in a bad recording."
-    """,
-    """Given the keywords:
-    'female', 'senior', 'bright', 'smooth', 'Dutch', 'neutral', 'slightly confined sounding', 'quite clear', 'very expressive', 'moderate pitch', 'quite fast'
-    A valid description could be: "A Dutch senior woman with a bright, smooth voice delivers a neutral and very expressive speech quite quickly in a slightly confined, clear room."
-    """,
-    """Given the keywords:
-    'male', 'teenager', 'dark', 'smooth', 'French', 'angry', 'moderate reverberation', 'slightly noisy', 'very monotone', 'very low pitch', 'moderate speed'
-    A valid description could be: "A French teenage boy with a dark, smooth voice delivers an angry, very monotone speech at a moderate pace in a moderately reverberant, slightly noisy room."
-    """,
-    """Given the keywords:
-    'female', 'adult', 'bright', 'rough', 'Canadian', 'happy', 'very confined sounding', 'quite clear', 'slightly expressive', 'slightly high pitch', 'quite slowly'
-    A valid description could be: "Bright and rough, the voice of a happy Canadian woman is slightly expressive as she speaks quite slowly in a very confined, clear room."
-    """,
+         'male', 'senior', 'soft', 'slightly rough', 'sad', 'roomy sounding', 'moderate noise level', 'somewhat expressive', 'low pitch', 'slowly',
+    A valid description could be: "A low, sad voice with a soft, slightly rough edge emerges from an elderly man. His words come slowly, echoing in a moderately noisy room."
+    """
 ]
+
 
 def main():
     # 1. Parse input arguments
