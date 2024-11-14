@@ -293,28 +293,6 @@ class DataCollatorWithPadding:
         batch = self.tokenizer.pad(input_ids, return_tensors="pt", padding="longest", return_attention_mask=True)
         return batch
 
-
-# TODO(SG): add accent keyword
-# PROMPT = """You will be given eleven descriptive keywords related to an audio sample of a person's speech. These keywords include:
-# 1. The gender (e.g., male, female)
-# 2. The age (e.g., teenagers, adult, senior)
-# 3. The brightness of the timbre (e.g. bright, dark)
-# 4. The smoothness of the timbre (e.g. smooth, rough)
-# 5. The accent (e.g. Dutch, German, Czech, Polish, French, Hungarian, Finnish, Romanian, Slovak, Spanish, Italian, Estonian, Lithuanian, Croatian, Slovene, English, Scottish, Irish, NorthernIrish, Indian, Vietnamese, Canadian, American)
-# 6. The emotion (e.g. angry, disgust, sad, fear, happy, neutral)
-# 7. The level of reverberation (e.g., very roomy sounding, quite roomy sounding, slightly roomy sounding, moderate reverberation, slightly confined sounding, quite confined sounding, very confined sounding)
-# 8. The amount of noise the sample (e.g., very noisy, quite noisy, slightly noisy, moderate ambient sound, slightly clear, quite clear, very clear)
-# 9. The tone of the speaker's voice (e.g., very monotone, quite monotone, slightly monotone, moderate intonation, slightly expressive, quite expressive, very expressive)
-# 10. The pace of the speaker's delivery (e.g., very slowly, quite slowly, slightly slowly, moderate speed, slightly fast, quite fast, very fast)
-# 11. The pitch of the speaker's voice (e.g., very low pitch, quite low pitch, slightly low pitch, moderate pitch, slightly high pitch, quite high pitch, very high pitch)
-
-# Your task is to create a text description using these keywords that accurately describes the speech sample while ensuring the description remains grammatically correct and easy to understand. You should rearrange the keyword order as necessary, and substitute synonymous terms where appropriate. If the term is None, just remove that keyword for the speech sample. If the amount of noise is 'very noisy' and the level of reverberation is 'very roomy sounding', include terms like 'very bad recording' in the description. Likewise, if the amount of noise is 'very clear' and the level of reverberation is 'very confined sounding', include terms like 'very good recording' in the description. Otherwise, do not add extra details beyond what has been provided, and only return the generated description.
-
-# For example, given the following keywords: 'female', 'adult', 'bright', 'smooth', 'None', 'happy', 'slightly roomy sounding', 'slightly noisy', 'very expressive', 'slightly low pitch', 'very slowly', a valid description would be: 'an adult woman with a deep, bright and smooth voice speaks slowly and happily but has an animated delivery in an echoey room with some background noise'.
-# Another valid description would be: 'In a room with slight background noise, a female middle-aged speaker delivers an animated, bright, smooth and expressive speech, at a very slow pace, with a happy mood.'
-
-# For the keywords: '[gender]', '[age]', '[brightness]', '[smoothness]', '[accent]', '[emotion]', '[reverberation]', '[noise]', '[speech_monotony]', '[pitch]', '[speaking_rate]', the corresponding description is:"
-# """
 PROMPT_FRONT = """
 Objective:
 Generate a single text description of a speech sample using the provided keywords.
@@ -342,12 +320,37 @@ Instructions:
 7. You can drop one of two keywords for diversity.
 8. Return only the generated description.
 
+Objective:
+Generate a single text description of a speech sample using the provided keywords.
+
+Keywords:
+1. Gender (e.g., male, female)
+2. Age (e.g., teenager, adult, senior)
+3. Brightness of the timbre (e.g., bright, dark)
+4. Smoothness of the timbre (e.g., smooth, rough)
+5. Emotion (e.g., angry, sad, happy, etc.)
+6. Reverberation (e.g., very roomy sounding, quite confined sounding, etc.)
+7. Noise level (e.g., very noisy, quite clear, etc.)
+8. Tone (e.g., very monotone, quite expressive, etc.)
+9. Pace (e.g., very slowly, quite fast, etc.)
+10. Pitch (e.g., very low pitch, quite high pitch, etc.)
+
+Instructions:
+1. Use the keywords to create a grammatically correct and easy-to-understand description of the speech sample, varying the sentence structure and phrasing as much as possible across examples.
+2. Rearrange the keyword order, split ideas across multiple sentences, or introduce descriptive transitions to make the description fluid and natural.
+3. Substitute synonymous terms where appropriate, and rephrase parts of the description to add variety and keep it engaging.
+4. If a keyword is 'None,' omit it from the description.
+5. If noise is 'very noisy' and reverberation is 'very roomy sounding,' describe it as a 'very bad recording.'
+6. If noise is 'very clear' and reverberation is 'very confined sounding,' describe it as a 'very good recording.'
+7. Avoid repeating the same structure for consecutive descriptions. Explore different ways to convey the tone, pace, emotion, and other characteristics.
+8. You can drop some of the keywords for diversity.
+9. Return only the generated description.
 
 """
 
 PROMPT_END = """
 Keywords:
-'[gender]', '[age]', '[brightness]', '[smoothness]', '[accent]', '[emotion]', '[reverberation]', '[noise]', '[speech_monotony]', '[pitch]', '[speaking_rate]'
+'[gender]', '[age]', '[brightness]', '[smoothness]', '[emotion]', '[reverberation]', '[noise]', '[speech_monotony]', '[pitch]', '[speaking_rate]'
 The corresponding description is:
 
 """
