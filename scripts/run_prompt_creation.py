@@ -471,7 +471,7 @@ def main():
             raw_datasets[split] = raw_datasets[split].select(range(data_args.max_eval_samples))
 
     # TODO(SG): add accent
-    EXPECTED_COLUMNS = {"pitch", "noise", "reverberation", "speech_monotony", "speaking_rate", 'age','accent','brightness','emotion','gender','smoothness'}
+    EXPECTED_COLUMNS = {"pitch", "noise", "reverberation", "speech_monotony", "speaking_rate", 'age','brightness','emotion','gender','smoothness'}
     if not EXPECTED_COLUMNS.issubset(raw_datasets_features):
         missing_columns = EXPECTED_COLUMNS - raw_datasets_features
         raise ValueError(
