@@ -1,12 +1,15 @@
-## 1. Get noisy file ids
-
+## 1. Drop columns for fast processing
 ```bash
-CACHE_DIR=/data/lmorove1/hwang258/gigadata/GigaCaps3/gigaspeech_val
-OUTPUT_PATH=/data/lmorove1/hwang258/Speech-Captioning-Dataset/noisy_ids.txt
-python get_noisy_ids.py --datadir $CACHE_DIR --savepath $OUTPUT_PATH
+python clean.py
 ```
 
-## 2. Audio tagging
+## 2. Get noisy file ids
+
+```bash
+python get_noisy_ids.py
+```
+
+## 3. Audio tagging
 Install
 ```
 git clone https://github.com/pytorch/fairseq
@@ -19,11 +22,11 @@ Download [model](https://drive.google.com/file/d/1b_f_nQAdjM1B6u72OFUtFiUu-4yM2s
 ```bash
 bash EAT/scripts/inference.sh 
 ```
-Please change the path in `EAT/scripts/inference.sh`.
 
 
-## 3. Add background tag
+## 4. Add background tag
 
 ```bash
-python 
+python add_background_tags.py
 ```
+
