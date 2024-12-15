@@ -313,7 +313,7 @@ Instructions:
 3. Substitute synonymous terms where appropriate, and rephrase parts of the description to add variety and keep it engaging.
 4. If a keyword is 'None,' omit it from the description.
 5. You can combine several keywords, e.g. if noise is 'very noisy' and reverberation is 'very roomy sounding,' describe it as a 'very bad recording.' If noise is 'very clear' and reverberation is 'very confined sounding,' describe it as a 'very good recording.'
-6. Avoid repeating the same structure for consecutive descriptions. Explore different ways to convey the tone, pace, emotion, and other characteristics.
+6. Avoid repeating the same structure for consecutive descriptions. Explore different ways to convey the tone, pace, and other characteristics.
 7. You can drop some of the keywords for diversity.
 8. Return only the generated description.
 
@@ -321,7 +321,7 @@ Instructions:
 
 PROMPT_END = """
 Keywords:
-'[gender]', '[age]', '[emotion]', '[reverberation]', '[noise]', '[speech_monotony]', '[pitch]', '[speaking_rate]', '[background]'
+'[gender]', '[age]', '[reverberation]', '[noise]', '[speech_monotony]', '[pitch]', '[speaking_rate]', '[background]'
 The corresponding description is:
 
 """
