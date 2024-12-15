@@ -311,7 +311,7 @@ Instructions:
 1. Use the keywords to create a grammatically correct and easy-to-understand description of the speech sample, varying the sentence structure and phrasing as much as possible across examples.
 2. Rearrange the keyword order, split ideas across multiple sentences, or introduce descriptive transitions to make the description fluid and natural.
 3. Substitute synonymous terms where appropriate, and rephrase parts of the description to add variety and keep it engaging.
-4. If a keyword is 'None,' omit it from the description.
+4. If a keyword is 'None', omit it from the description.
 5. You can combine several keywords, e.g. if noise is 'very noisy' and reverberation is 'very roomy sounding,' describe it as a 'very bad recording.' If noise is 'very clear' and reverberation is 'very confined sounding,' describe it as a 'very good recording.'
 6. Avoid repeating the same structure for consecutive descriptions. Explore different ways to convey the tone, pace, and other characteristics.
 7. You can drop some of the keywords for diversity.
@@ -366,6 +366,46 @@ EXAMPLES = [
     """Given the keywords:
          'male', 'middle-aged adult', 'very confined sounding', 'moderate ambient sound', 'quite monotone', 'slightly high pitch', 'quite fast', 'None',
     A valid description could be: "With a slightly high pitch and monotone delivery, a middle-aged man speaks rapidly in a very confined space where ambient noise is present but not overwhelming."
+    """,
+    """Given the keywords:
+         'female', 'middle-aged adult', 'very confined sounding', 'very clear', 'slightly monotone', 'moderate pitch', 'slightly fast', 'Office, Typing',
+    A valid description could be: "Inside a confined and acoustically clear office setting, a middle-aged female voice, moderately pitched and slightly monotone, speaks briskly amidst the faint sound of typing."
+    """,
+    """Given the keywords:
+         'male', 'middle-aged adult', 'very roomy sounding', 'very noisy', 'slightly monotone', 'slightly low pitch', 'quite fast', 'Market, Chatter',
+    A valid description could be: "Amid the bustling chatter of a noisy market, a middle-aged male voice, low-pitched and slightly monotone, speaks rapidly in a very open space."
+    """,
+    """Given the keywords:
+         'female', 'middle-aged adult', 'moderate reverberation', 'slightly noisy', 'moderate intonation', 'slightly high pitch', 'slightly slowly', 'Park, Birds, Wind',
+    A valid description could be: "The speech, delivered by a middle-aged woman, carries a slightly high pitch and a steady intonation. Her voice moves leisurely through a moderately reverberant park, accompanied by soft bird calls and a gentle breeze."
+    """,
+    """Given the keywords:
+         'male', 'young adult', 'moderate reverberation', 'slightly noisy', 'slightly monotone', 'moderate pitch', 'moderate speed', 'Cave, Water drops',
+    A valid description could be: "The voice of a young man, moderately pitched and slightly monotone, echoes within a reverberant cave. Droplets of water splashing intermittently add to the natural ambiance."
+    """,
+    """Given the keywords:
+         'female', 'elderly', 'slightly confined sounding', 'very noisy', 'slightly monotone', 'slightly low pitch', 'quite fast', 'Crowd, Marketplace',
+    A valid description could be: "Her low and hurried voice, slightly monotone, emerges from the tightly packed marketplace. The elderly woman’s speech competes with the bustling noise of the crowd around her."
+    """,
+    """Given the keywords:
+         'male', 'elderly', 'very roomy sounding', 'moderate noise', 'very monotone', 'slightly low pitch', 'slightly slowly', 'River, Wind',
+    A valid description could be: "His voice, monotone and low, travels slowly through the expanse of a riverside setting. The elderly man’s speech mingles with the rustling wind and the soft sound of water."
+    """,
+    """Given the keywords:
+         'female', 'elderly', 'slightly confined sounding', 'moderate noise', 'very expressive', 'slightly high pitch', 'moderate speed', 'Park, Children, Birds',
+    A valid description could be: "Expressive and high-pitched, an elderly woman’s voice echoes with a moderate pace in a park setting. Children playing and chirping birds create a lively ambiance around her."
+    """,
+    """Given the keywords:
+         'male', 'middle-aged adult', 'very confined sounding', 'very noisy', 'quite monotone', 'slightly low pitch', 'slightly fast', 'Factory, Machines',
+    A valid description could be: "Confined within a factory filled with noise, a middle-aged man speaks in a monotone voice. His slightly fast delivery and low pitch cut through the hum of machines."
+    """,
+    """Given the keywords:
+         'male', 'young adult', 'moderate reverberation', 'slightly noisy', 'slightly monotone', 'moderate pitch', 'moderate speed', 'Cave, Water drops',
+    A valid description could be: "In a cave where water drops create intermittent echoes, a young man speaks with moderate pitch and a monotone delivery. The slight reverberation enhances the steady rhythm of his speech."
+    """,
+    """Given the keywords:
+         'male', 'elderly', 'very roomy sounding', 'moderate noise', 'very monotone', 'slightly low pitch', 'slightly slowly', 'River, Wind',
+    A valid description could be: "The slow, low-pitched voice of an elderly man drifts through a spacious riverside area. His monotone delivery merges with the moderate ambient noise of the wind and flowing water."
     """
 ]
 
