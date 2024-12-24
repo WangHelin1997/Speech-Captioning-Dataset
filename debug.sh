@@ -18,6 +18,8 @@ python annotate.py "westbrook/gigaspeech-tiny-stage1" \
   --repo_id "gigaspeech-tiny-stage2" \
   --csv_dir "/data/lmorove1/hwang258/dataspeech/cache"
 
+BIN_PATH="/data/lmorove1/hwang258/Speech-Captioning-Dataset/bin.json"
+
 python ./scripts/metadata_to_text.py \
     "westbrook/gigaspeech-tiny-stage2" \
     --repo_id "gigaspeech-tiny-stage3" \
