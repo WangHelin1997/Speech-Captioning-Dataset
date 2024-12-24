@@ -23,7 +23,8 @@ python ./scripts/metadata_to_text.py \
     --repo_id "gigaspeech-tiny-stage3" \
     --cache_dir ${CACHE_DIR} \
     --configuration "default" \
-    --cpu_num_workers 8
+    --cpu_num_workers 8 \
+    --path_to_bin_edges ${BIN_PATH}
 
 python ./scripts/run_prompt_creation.py \
   --cache_dir ${CACHE_DIR} \
