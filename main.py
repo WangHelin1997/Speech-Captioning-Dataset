@@ -1,4 +1,4 @@
-from datasets import load_dataset, Audio
+from datasets import load_dataset, Audio, load_from_disk
 from multiprocess import set_start_method
 from dataspeech import rate_apply, pitch_apply, snr_apply, squim_apply
 import torch
@@ -8,24 +8,10 @@ import re
 
 os.environ['OPENBLAS_NUM_THREADS'] = '1'
 
-# Define a function to check for keywords
-def contains_keywords(text):
-    keywords = ["<SIL>", "<MUSIC>", "<NOISE>", "<OTHER>"]  # Add your keywords here
-    return any(keyword in text for keyword in keywords)
-
-# Define a function to remove specific keywords
-def remove_keywords(text):
-    keywords = ["<COMMA>", "<PERIOD>", "<QUESTIONMARK>", "<EXCLAMATIONPOINT>"]  # Add your keywords here
-    pattern = re.compile('|'.join(map(re.escape, keywords)))
-    return pattern.sub('', text)
 
 if __name__ == "__main__":
     set_start_method("spawn")
     parser = argparse.ArgumentParser()
-    
-    
-    parser.add_argument("dataset_name", type=str, help="Path or name of the dataset. See: https://huggingface.co/docs/datasets/v2.17.0/en/package_reference/loading_methods#datasets.load_dataset.path")
-    parser.add_argument("--configuration", default=None, type=str, help="Dataset configuration to use, if necessary.")
     parser.add_argument("--cache_dir", default=None, type=str, help="Cache dir to download data")
     parser.add_argument("--output_dir", default=None, type=str, help="If specified, save the dataset on disk with this path.")
     parser.add_argument("--repo_id", default=None, type=str, help="If specified, push the dataset to the hub.")
@@ -44,20 +30,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     print(torch.cuda.device_count())
-    if args.configuration:
-        dataset = load_dataset(args.dataset_name, args.configuration, num_proc=args.cpu_num_workers, cache_dir=args.cache_dir)
-    else:
-        dataset = load_dataset(args.dataset_name, num_proc=args.cpu_num_workers, cache_dir=args.cache_dir)
-        
-    audio_column_name = "audio" if args.rename_column else args.audio_column_name
-    text_column_name = "text" if args.rename_column else args.text_column_name
-    if args.rename_column:
-        dataset = dataset.rename_columns({args.audio_column_name: "audio", args.text_column_name: "text"})
-        
-    # Filter out rows that contain the keywords in the specified column
-    dataset = dataset.filter(lambda example: not contains_keywords(example['text']))
-
-    dataset = dataset.map(lambda example: {'text': remove_keywords(example['text'])})
+    dataset = load_from_disk(args.cache_dir)
 
     if args.apply_squim_quality_estimation:
         print("Compute SI-SDR, PESQ, STOI")
@@ -67,19 +40,19 @@ if __name__ == "__main__":
             batch_size=args.batch_size,
             with_rank=True if torch.cuda.device_count()>0 else False,
             num_proc=torch.cuda.device_count()*args.num_workers_per_gpu_for_squim if torch.cuda.device_count()>0 else args.cpu_num_workers,
-            remove_columns=[audio_column_name], # tricks to avoid rewritting audio
-            fn_kwargs={"audio_column_name": audio_column_name,},
+            remove_columns=["audio"], # tricks to avoid rewritting audio
+            fn_kwargs={"audio_column_name": "audio",},
         )
 
     print("Compute pitch")
-    pitch_dataset = dataset.cast_column(audio_column_name, Audio(sampling_rate=16_000)).map(
+    pitch_dataset = dataset.cast_column("audio", Audio(sampling_rate=16_000)).map(
         pitch_apply,
         batched=True,
         batch_size=args.batch_size,
         with_rank=True if torch.cuda.device_count()>0 else False,
         num_proc=torch.cuda.device_count()*args.num_workers_per_gpu_for_pitch if torch.cuda.device_count()>0 else args.cpu_num_workers,
         # remove_columns=[audio_column_name], # tricks to avoid rewritting audio
-        fn_kwargs={"audio_column_name": audio_column_name, "penn_batch_size": args.penn_batch_size},
+        fn_kwargs={"audio_column_name": "audio", "penn_batch_size": args.penn_batch_size},
     )
 
     print("Compute snr and reverb")
@@ -89,18 +62,18 @@ if __name__ == "__main__":
         batch_size=args.batch_size,
         with_rank=True if torch.cuda.device_count()>0 else False,
         num_proc=torch.cuda.device_count()*args.num_workers_per_gpu_for_snr if torch.cuda.device_count()>0 else args.cpu_num_workers,
-        remove_columns=[audio_column_name], # tricks to avoid rewritting audio
-        fn_kwargs={"audio_column_name": audio_column_name},
+        # remove_columns=["audio"], # tricks to avoid rewritting audio
+        fn_kwargs={"audio_column_name": "audio"},
     )
     
     print("Compute speaking rate")
-    if "speech_duration" in snr_dataset[next(iter(snr_dataset.keys()))].features:    
+    if "speech_duration" in snr_dataset[0].keys():    
         rate_dataset = snr_dataset.map(
             rate_apply,
             with_rank=False,
             num_proc=args.cpu_num_workers,
             writer_batch_size= args.cpu_writer_batch_size,
-            fn_kwargs={"audio_column_name": audio_column_name, "text_column_name": text_column_name},
+            fn_kwargs={"audio_column_name": "audio", "text_column_name": "text"},
         )
     else:
         rate_dataset = dataset.map(
@@ -108,25 +81,16 @@ if __name__ == "__main__":
             with_rank=False,
             num_proc=args.cpu_num_workers,
             writer_batch_size= args.cpu_writer_batch_size,
-            remove_columns=[audio_column_name], # tricks to avoid rewritting audio
-            fn_kwargs={"audio_column_name": audio_column_name, "text_column_name": text_column_name},
+            remove_columns=["audio"], # tricks to avoid rewritting audio
+            fn_kwargs={"audio_column_name": "audio", "text_column_name": "text"},
         )
     
-    for split in dataset.keys():
-        dataset[split] = pitch_dataset[split].add_column("snr", snr_dataset[split]["snr"]).add_column("c50", snr_dataset[split]["c50"])
-        if "speech_duration" in snr_dataset[split]:
-            dataset[split] = dataset[split].add_column("speech_duration", snr_dataset[split]["snr"])
-        dataset[split] = dataset[split].add_column("speaking_rate", rate_dataset[split]["speaking_rate"]).add_column("phonemes", rate_dataset[split]["phonemes"])
-        if args.apply_squim_quality_estimation:
-            dataset[split] = dataset[split].add_column("stoi", squim_dataset[split]["stoi"]).add_column("si-sdr", squim_dataset[split]["sdr"]).add_column("pesq", squim_dataset[split]["pesq"])
-    
-    if args.output_dir:
-        print("Saving to disk...")
-        dataset.save_to_disk(args.output_dir)
-    if args.repo_id:
-        print("Pushing to the hub...")
-        if args.configuration:
-            dataset.push_to_hub(args.repo_id, args.configuration)
-        else:
-            dataset.push_to_hub(args.repo_id)
-    
+    dataset = pitch_dataset.add_column("snr", snr_dataset["snr"]).add_column("c50", snr_dataset["c50"])
+    if "speech_duration" in snr_dataset:
+        dataset = dataset.add_column("speech_duration", snr_dataset["snr"])
+    dataset = dataset.add_column("speaking_rate", rate_dataset["speaking_rate"]).add_column("phonemes", rate_dataset["phonemes"])
+    if args.apply_squim_quality_estimation:
+        dataset = dataset.add_column("stoi", squim_dataset["stoi"]).add_column("si-sdr", squim_dataset["sdr"]).add_column("pesq", squim_dataset["pesq"])
+
+    print("Saving to disk...")
+    dataset.save_to_disk(args.output_dir)
