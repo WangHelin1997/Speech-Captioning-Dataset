@@ -1,12 +1,20 @@
 import numpy as np
 import pandas as pd
-from datasets import load_dataset, DatasetDict
+from datasets import load_dataset, DatasetDict, load_from_disk
 from multiprocess import set_start_method
 import argparse
 from pathlib import Path
 import os
 import matplotlib.pyplot as plt
 import json
+
+# SPEAKER_RATE_BINS = ["very slowly", "quite slowly", "slightly slowly", "moderate speed", "slightly fast", "quite fast", "very fast"]
+# SNR_BINS = ["very noisy", "quite noisy", "slightly noisy", "moderate ambient sound", "slightly clear", "quite clear", "very clear"]
+# REVERBERATION_BINS = ["very roomy sounding", "quite roomy sounding", "slightly roomy sounding", "moderate reverberation", "slightly confined sounding", "quite confined sounding", "very confined sounding"]
+# UTTERANCE_LEVEL_STD = ["very monotone", "quite monotone", "slightly monotone", "moderate intonation", "slightly expressive", "quite expressive", "very expressive"]
+
+# # this one is supposed to be apply to speaker-level mean pitch, and relative to gender
+# SPEAKER_LEVEL_PITCH_BINS = ["very low pitch", "quite low pitch", "slightly low pitch", "moderate pitch", "slightly high pitch", "quite high pitch", "very high pitch"]
 
 SPEAKER_RATE_BINS = ["very slowly", "slowly", "slightly slowly", "moderate speed", "slightly fast", "fast", "very fast"]
 SNR_BINS = ["very noisy", "noisy", "slightly noisy", "balanced in clarity", "slightly clean", "clean", "very clean"]
@@ -56,33 +64,7 @@ def bins_to_text(dataset, text_bins, column_name, output_column_name, leading_sp
     Compute bins of `column_name` from the splits `leading_split_for_bins` and apply text bins to every split.
     `leading_split_for_bins` can be a string or a list.
     '''
-    if bin_edges is None:
-        values = []
-        for df in dataset:
-            for split in df:
-                if leading_split_for_bins is None or leading_split_for_bins in split:
-                    values.extend(df[split][column_name])
-        
-        # filter out outliers
-        values = np.array(values)
-        if std_tolerance is not None:
-            filtered_values = values[np.abs(values - np.mean(values)) < std_tolerance * np.std(values)]
-
-        if save_dir is not None:
-            visualize_bins_to_text(values, filtered_values, "Before filtering", "After filtering", text_bins, save_dir, output_column_name, lower_range=lower_range)
-            
-        # speaking_rate can easily have outliers
-        if save_dir is not None and output_column_name=="speaking_rate":
-            visualize_bins_to_text(filtered_values, filtered_values, "After filtering", "After filtering", text_bins, save_dir, f"{output_column_name}_after_filtering", lower_range=lower_range)
-        
-        values = filtered_values
-        hist, bin_edges = np.histogram(values, bins = len(text_bins), range=(lower_range, values.max()) if lower_range else None)
-        
-        if only_save_plot:
-            return dataset, bin_edges
-    else:
-        print(f"Already computed bin edges have been passed for {output_column_name}. Will use: {bin_edges}.")
-
+    
     def batch_association(batch):
         index_bins = np.searchsorted(bin_edges, batch, side="left")
         # do min(max(...)) when values are outside of the main bins
@@ -92,7 +74,7 @@ def bins_to_text(dataset, text_bins, column_name, output_column_name, leading_sp
             output_column_name: batch_bins
         }
     
-    dataset = [df.map(batch_association, batched=True, batch_size=batch_size, input_columns=[column_name], num_proc=num_workers) for df in dataset]
+    dataset = dataset.map(batch_association, batched=True, batch_size=batch_size, input_columns=[column_name], num_proc=num_workers)
     return dataset, bin_edges
 
 def speaker_level_relative_to_gender(dataset, text_bins, speaker_column_name, gender_column_name, column_name, output_column_name, batch_size = 4, num_workers=1, std_tolerance=None, save_dir=None, only_save_plot=False, bin_edges=None):
@@ -102,10 +84,8 @@ def speaker_level_relative_to_gender(dataset, text_bins, speaker_column_name, ge
     This time, doesn't use leading_split_for_bins, computes it for all. Could probably be optimized
     '''
     list_data = []
-    for df in dataset:
-        for split in df:
-            panda_data = df[split].remove_columns([col for col in df[split].column_names if col not in {speaker_column_name, column_name, gender_column_name}]).to_pandas()
-            list_data.append(panda_data)
+    panda_data = dataset.remove_columns([col for col in dataset.column_names if col not in {speaker_column_name, column_name, gender_column_name}]).to_pandas()
+    list_data.append(panda_data)
         
     dataframe = pd.concat(list_data, ignore_index=True)
     dataframe = dataframe.groupby(speaker_column_name).agg({column_name: "mean", gender_column_name: "first"})
@@ -133,7 +113,7 @@ def speaker_level_relative_to_gender(dataset, text_bins, speaker_column_name, ge
 
         if only_save_plot:
             return dataset, bin_edges
-     
+
     speaker_id_to_bins = dataframe.apply(lambda x: np.searchsorted(bin_edges[x[gender_column_name]], x[column_name]), axis=1).to_dict()
         
     def batch_association(batch):
@@ -146,16 +126,12 @@ def speaker_level_relative_to_gender(dataset, text_bins, speaker_column_name, ge
         }
         
     
-    dataset = [df.map(batch_association, batched=True, input_columns=[speaker_column_name], batch_size=batch_size, num_proc=num_workers) for df in dataset]
+    dataset = dataset.map(batch_association, batched=True, input_columns=[speaker_column_name], batch_size=batch_size, num_proc=num_workers)
     return dataset, bin_edges
 
 if __name__ == "__main__":
     set_start_method("spawn")
     parser = argparse.ArgumentParser()
-    
-    
-    parser.add_argument("dataset_name", type=str, help="Path or name of the dataset(s). If multiple datasets, names have to be separated by `+`.")
-    parser.add_argument("--configuration", default=None, type=str, help="Dataset configuration(s) to use (or configuration separated by +).")
     parser.add_argument("--cache_dir", default=None, type=str, help="Cache dir to download data")
     parser.add_argument("--output_dir", default=None, type=str, help="If specified, save the dataset(s) on disk. If multiple datasets, paths have to be separated by `+`.")
     parser.add_argument("--repo_id", default=None, type=str, help="If specified, push the dataset(s) to the hub. If multiple datasets, names have to be separated by `+`.")
@@ -165,7 +141,7 @@ if __name__ == "__main__":
     parser.add_argument("--avoid_pitch_computation", default=False, action="store_true", help="If `True`, will not compute `pitch`. Note that `pitch` is computed on a speaker-level, relative to gender, so you don't need it in a mono-speaker setting.")
     parser.add_argument("--cpu_num_workers", default=1, type=int, help="Number of CPU workers.")
     parser.add_argument("--batch_size", default=16, type=int, help="Batch size in `Dataset.map` operations. https://huggingface.co/docs/datasets/v2.17.0/en/package_reference/main_classes#datasets.Dataset.map")
-    parser.add_argument("--speaker_id_column_name", default="speaker", type=str, help="Speaker id column name. Only used if `avoid_pitch_computation=False`")
+    parser.add_argument("--speaker_id_column_name", default="segment_id", type=str, help="Speaker id column name. Only used if `avoid_pitch_computation=False`")
     parser.add_argument("--gender_column_name", default="gender", type=str, help="Gender column name. .Only used if `avoid_pitch_computation=False`")
     parser.add_argument("--pitch_std_tolerance", default=2., type=float, help="Standard deviation tolerance for pitch estimation. Any value that is outside mean ± std * tolerance is discared. Only used if `avoid_pitch_computation=False`.")
     parser.add_argument("--speaking_rate_std_tolerance", default=4., type=float, help="Standard deviation tolerance for speaking rate estimation. Any value that is outside mean ± std * tolerance is discared. Only used if `path_to_bin_edges=False`.")
@@ -200,52 +176,8 @@ if __name__ == "__main__":
     reverberation_bins = text_bins_dict.get("reverberation_bins", REVERBERATION_BINS)
     utterance_level_std = text_bins_dict.get("utterance_level_std", UTTERANCE_LEVEL_STD)
     
-    output_dirs = [args.output_dir] if args.output_dir is not None else None
-    repo_ids = [args.repo_id] if args.repo_id is not None else None
-    if args.configuration:
-        if "+" in args.dataset_name:
-            dataset_names = args.dataset_name.split("+")
-            dataset_configs = args.configuration.split("+")
-            if len(dataset_names) != len(dataset_configs):
-                raise ValueError(f"There are {len(dataset_names)} datasets spotted but {len(dataset_configs)} configuration spotted")
-            
-            if args.repo_id is not None:
-                repo_ids = args.repo_id.split("+")
-                if len(dataset_names) != len(repo_ids):
-                    raise ValueError(f"There are {len(dataset_names)} datasets spotted but {len(repo_ids)} repository ids spotted")
-
-            if args.output_dir is not None:
-                output_dirs = args.output_dir.split("+")
-                if len(dataset_names) != len(output_dirs):
-                    raise ValueError(f"There are {len(dataset_names)} datasets spotted but {len(output_dirs)} local paths on which to save the datasets spotted")
-            
-            dataset = []
-            for dataset_name, dataset_config in zip(dataset_names, dataset_configs):
-                tmp_dataset = load_dataset(dataset_name, dataset_config, cache_dir=args.cache_dir)
-                dataset.append(tmp_dataset)
-        else:
-            dataset = [load_dataset(args.dataset_name, args.configuration, cache_dir=args.cache_dir)]
-            dataset_configs = [args.configuration]
-    else:
-        if "+" in args.dataset_name:
-            dataset_names = args.dataset_name.split("+")
-            if args.repo_id is not None:
-                repo_ids = args.repo_id.split("+")
-                if len(dataset_names) != len(repo_ids):
-                    raise ValueError(f"There are {len(dataset_names)} datasets spotted but {len(repo_ids)} repository ids spotted")
-
-            if args.output_dir is not None:
-                output_dirs = args.output_dir.split("+")
-                if len(dataset_names) != len(output_dirs):
-                    raise ValueError(f"There are {len(dataset_names)} datasets spotted but {len(output_dirs)} local paths on which to save the datasets spotted")
-            
-            dataset = []
-            for dataset_name, dataset_config in zip(dataset_names):
-                tmp_dataset = load_dataset(dataset_name)
-                dataset.append(tmp_dataset)
-
-        else:
-            dataset = [load_dataset(args.dataset_name)]
+    dataset = load_from_disk(args.cache_dir)
+    
 
     if args.plot_directory:
         Path(args.plot_directory).mkdir(parents=True, exist_ok=True)
@@ -261,28 +193,4 @@ if __name__ == "__main__":
     dataset, noise_bin_edges = bins_to_text(dataset, snr_bins, "snr", "noise", batch_size=args.batch_size, num_workers=args.cpu_num_workers, leading_split_for_bins=args.leading_split_for_bins, std_tolerance=args.snr_std_tolerance, save_dir=args.plot_directory, only_save_plot=args.only_save_plot, bin_edges=bin_edges_dict.get("noise",None), lower_range=args.snr_lower_range)
     dataset, reverberation_bin_edges = bins_to_text(dataset, reverberation_bins, "c50", "reverberation", batch_size=args.batch_size, num_workers=args.cpu_num_workers, leading_split_for_bins=args.leading_split_for_bins, std_tolerance=args.reverberation_std_tolerance, save_dir=args.plot_directory, only_save_plot=args.only_save_plot, bin_edges=bin_edges_dict.get("reverberation",None))
     dataset, speech_monotony_bin_edges = bins_to_text(dataset, utterance_level_std, "utterance_pitch_std", "speech_monotony", batch_size=args.batch_size, num_workers=args.cpu_num_workers, leading_split_for_bins=args.leading_split_for_bins, std_tolerance=args.speech_monotony_std_tolerance, save_dir=args.plot_directory, only_save_plot=args.only_save_plot, bin_edges=bin_edges_dict.get("speech_monotony",None))
-
-    if args.save_bin_edges:
-        bin_edges = {
-            "speaking_rate": speaking_rate_bin_edges.tolist(),
-            "noise": noise_bin_edges.tolist(),
-            "reverberation": reverberation_bin_edges.tolist(),
-            "speech_monotony": speech_monotony_bin_edges.tolist(),
-        }
-        if not args.avoid_pitch_computation:
-            bin_edges["pitch_bins_male"] = pitch_bin_edges["male"].tolist()
-            bin_edges["pitch_bins_female"] = pitch_bin_edges["female"].tolist()
-        
-        with open(args.save_bin_edges, "w") as outfile: 
-            json.dump(bin_edges, outfile)
-        
-    if not args.only_save_plot:
-        if args.output_dir:
-            for output_dir, df in zip(output_dirs, dataset):
-                df.save_to_disk(output_dir)
-        if args.repo_id:
-            for i, (repo_id, df) in enumerate(zip(repo_ids, dataset)):
-                if args.configuration:
-                    df.push_to_hub(repo_id, dataset_configs[i])
-                else:
-                    df.push_to_hub(repo_id)
+    dataset.save_to_disk(args.output_dir)
