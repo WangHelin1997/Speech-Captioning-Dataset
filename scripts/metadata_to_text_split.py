@@ -8,13 +8,13 @@ import os
 import matplotlib.pyplot as plt
 import json
 
-SPEAKER_RATE_BINS = ["very slowly", "quite slowly", "slightly slowly", "moderate speed", "slightly fast", "quite fast", "very fast"]
-SNR_BINS = ["very noisy", "quite noisy", "slightly noisy", "moderate ambient sound", "slightly clear", "quite clear", "very clear"]
-REVERBERATION_BINS = ["very roomy sounding", "quite roomy sounding", "slightly roomy sounding", "moderate reverberation", "slightly confined sounding", "quite confined sounding", "very confined sounding"]
-UTTERANCE_LEVEL_STD = ["very monotone", "quite monotone", "slightly monotone", "moderate intonation", "slightly expressive", "quite expressive", "very expressive"]
+SPEAKER_RATE_BINS = ["very slowly", "slowly", "slightly slowly", "moderate speed", "slightly fast", "fast", "very fast"]
+SNR_BINS = ["very noisy", "noisy", "slightly noisy", "balanced in clarity", "slightly clean", "clean", "very clean"]
+REVERBERATION_BINS = ["very distant-sounding", "distant-sounding", "slightly distant-sounding", "slightly close-sounding", "very close-sounding"]
+UTTERANCE_LEVEL_STD = ["very monotone", "monotone", "slightly expressive and animated", "expressive and animated", "very expressive and animated"]
 
 # this one is supposed to be apply to speaker-level mean pitch, and relative to gender
-SPEAKER_LEVEL_PITCH_BINS = ["very low pitch", "quite low pitch", "slightly low pitch", "moderate pitch", "slightly high pitch", "quite high pitch", "very high pitch"]
+SPEAKER_LEVEL_PITCH_BINS = ["very low-pitch", "low-pitch", "slightly low-pitch", "moderate pitch", "slightly high-pitch", "high-pitch", "very high-pitch"]
 
 
 def visualize_bins_to_text(values_1, values_2, name_1, name_2, text_bins, save_dir, output_column_name, default_bins=100, lower_range=None):
