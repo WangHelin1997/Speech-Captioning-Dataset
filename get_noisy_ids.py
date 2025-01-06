@@ -14,7 +14,7 @@ if __name__ == "__main__":
 
     def get_ids_noisy(example, idx):
         noise = example['noise']
-        is_noisy = (noise=='slightly noisy' or noise=='quite noisy' or noise=='very noisy')
+        is_noisy = (noise=='slightly noisy' or noise=='noisy' or noise=='very noisy')
         return {"segment_id": example['segment_id'], "is_noisy": is_noisy}
 
     ids_noisy = dataset.map(
