@@ -110,7 +110,7 @@ if __name__ == "__main__":
     dataset = pitch_dataset.add_column("snr", snr_dataset["snr"]).add_column("c50", snr_dataset["c50"])
     if "speech_duration" in snr_dataset:
         dataset = dataset.add_column("speech_duration", snr_dataset["snr"])
-    dataset = dataset.add_column("speaking_rate", rate_dataset["speaking_rate"]).add_column("phonemes", rate_dataset["phonemes"])
+    dataset = dataset.add_column("speaking_rate_value", rate_dataset["speaking_rate_value"]).add_column("phonemes", rate_dataset["phonemes"])
     if args.apply_squim_quality_estimation:
         dataset = dataset.add_column("stoi", squim_dataset["stoi"]).add_column("si-sdr", squim_dataset["sdr"]).add_column("pesq", squim_dataset["pesq"])
     
